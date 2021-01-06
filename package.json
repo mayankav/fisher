@@ -1,0 +1,16 @@
+{
+  "name": "Fisher",
+  "version": "1.0.0",
+  "description": "scraper for youtube video transcripts from the ytd-engagement-panel",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^5.5.0"
+  }
+}
