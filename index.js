@@ -61,6 +61,6 @@ exports.handler = async (event, context, callback) => {
           transcriptData[refactorTimeStamp(timeStamp.trim())] = caption.trim();
           rawTranscriptData[timeStamp.trim()] = caption.trim();
       }
-      return transcriptData;
+      return {rawTranscriptData, transcriptData};
   }
 };
