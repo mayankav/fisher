@@ -1,8 +1,9 @@
+/* aws lambda counterpart - file meant for testing fisher locally on express server */
 const pup = require('puppeteer-core');
-const moreBtnXPath = '/html/body/ytd-app/div/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[5]/div[2]/ytd-video-primary-info-renderer/div/div/div[3]/div/ytd-menu-renderer/yt-icon-button';
-const openTranscriptBtnXPath = '/html/body/ytd-app/ytd-popup-container/iron-dropdown[1]/div/ytd-menu-popup-renderer/paper-listbox/ytd-menu-service-item-renderer';
-const engagementPanelXPath = '/html/body/ytd-app/div/ytd-page-manager/ytd-watch-flexy/div[5]/div[2]/div/div[1]/ytd-engagement-panel-section-list-renderer/div[2]/ytd-transcript-renderer/div[2]/ytd-transcript-body-renderer';
-const videoURL = 'https://www.youtube.com/watch?v=DC5wtYGQ7XE';
+const moreBtnXPath = '/html/body/ytd-app/div/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[6]/div[2]/ytd-video-primary-info-renderer/div/div/div[3]/div/ytd-menu-renderer/yt-icon-button';
+const openTranscriptBtnXPath = '/html/body/ytd-app/ytd-popup-container/tp-yt-iron-dropdown[1]/div/ytd-menu-popup-renderer/tp-yt-paper-listbox/ytd-menu-service-item-renderer';
+const engagementPanelXPath = '/html/body/ytd-app/div/ytd-page-manager/ytd-watch-flexy/div[5]/div[2]/div/div[1]/ytd-engagement-panel-section-list-renderer/div[2]/ytd-transcript-renderer/div[1]/ytd-transcript-body-renderer';
+const videoURL = 'https://www.youtube.com/watch?v=wJB90G-tsgo';
 
 /* takes timeStamp (minutes:seconds) as an argument
  * returns refactoredTimeStamp converted in seconds
