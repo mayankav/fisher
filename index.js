@@ -1,9 +1,10 @@
 /** file to be uploaded on aws s3 as zip and then imported into aws lambda */
-const chromium = require('chrome-aws-lambda');
-const moreBtnXPath = '/html/body/ytd-app/div/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[6]/div[2]/ytd-video-primary-info-renderer/div/div/div[3]/div/ytd-menu-renderer/yt-icon-button';
-const openTranscriptBtnXPath = '/html/body/ytd-app/ytd-popup-container/tp-yt-iron-dropdown[1]/div/ytd-menu-popup-renderer/tp-yt-paper-listbox/ytd-menu-service-item-renderer';
-const engagementPanelXPath = '/html/body/ytd-app/div/ytd-page-manager/ytd-watch-flexy/div[5]/div[2]/div/div[1]/ytd-engagement-panel-section-list-renderer/div[2]/ytd-transcript-renderer/div[1]/ytd-transcript-body-renderer';
-const videoURL = 'https://www.youtube.com/watch?v=';
+const chromium = require("chrome-aws-lambda");
+const moreBtnXPath =
+  "/html/body/ytd-app/div[1]/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[2]/ytd-watch-metadata/div/div[4]/div[1]/div/ytd-text-inline-expander/tp-yt-paper-button[1]";
+const openTranscriptBtnXPath =
+  "/html/body/ytd-app/div[1]/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[2]/ytd-watch-metadata/div/div[4]/div[1]/div/ytd-text-inline-expander/div[2]/ytd-structured-description-content-renderer/div/ytd-video-description-transcript-section-renderer/div[3]/div/ytd-button-renderer/yt-button-shape/button";
+const videoURL = "https://www.youtube.com/watch?v=wJB90G-tsgo";
 
 exports.handler = async (event, context, callback) => {
   let browser;
@@ -28,40 +29,45 @@ exports.handler = async (event, context, callback) => {
   }
 
   /* takes timeStamp (minutes:seconds) as an argument
-  * returns refactoredTimeStamp converted in seconds
-  */
-  function refactorTimeStamp (timeStamp) {
-      const minutes = timeStamp.split(':')[0];
-      const trailingSeconds = timeStamp.split(':')[1];
-      const wholesomeSeconds = minutes*60;
-      const refactoredTimeStamp = +trailingSeconds + wholesomeSeconds;
-      return refactoredTimeStamp;
+   * returns refactoredTimeStamp converted in seconds
+   */
+  function refactorTimeStamp(timeStamp) {
+    const minutes = timeStamp.split(":")[0];
+    const trailingSeconds = timeStamp.split(":")[1];
+    const wholesomeSeconds = minutes * 60;
+    const refactoredTimeStamp = +trailingSeconds + wholesomeSeconds;
+    return refactoredTimeStamp;
   }
 
   async function getTranscriptData(page) {
-      await page.goto(videoURL+event.pathParameters.vid);
-      await page.waitForXPath(moreBtnXPath);
-      const moreBtnHandle = (await page.$x(moreBtnXPath))[0];
-      await moreBtnHandle.click();
-      await page.waitForXPath(openTranscriptBtnXPath);
-      const openTranscriptBtnHandle = (await page.$x(openTranscriptBtnXPath))[0];
-      await openTranscriptBtnHandle.click();
-      await page.waitForXPath(engagementPanelXPath);
-      const enagementPanelHandle = (await page.$x(engagementPanelXPath))[0];
-      // selecting all child elements of enagementPanelHandle with class name 'cue-group'
-      let cueGroupList = await enagementPanelHandle.$$(':scope > .cue-group'); 
-      const transcriptData = {};
-      const rawTranscriptData = {};
-      for(let i = 0; i < cueGroupList.length; i++) {
-          const cueGroupHandle = cueGroupList[i];
-          const cueGroupStartHandle =  await cueGroupHandle.$(':scope > .cue-group-start-offset');
-          const timeStamp = await cueGroupStartHandle.evaluate(domElement => domElement.textContent);
-          const cuesHandle = await cueGroupHandle.$(':scope > .cues');
-          const cueHandle = await cuesHandle.$(':scope > .cue');
-          const caption = await cueHandle.evaluate(domElement => domElement.textContent);
-          transcriptData[refactorTimeStamp(timeStamp.trim())] = caption.trim();
-          rawTranscriptData[timeStamp.trim()] = caption.trim();
-      }
-      return {rawTranscriptData, transcriptData};
+    await page.goto(videoURL + event.pathParameters.vid);
+    await page.waitForXPath(moreBtnXPath);
+    const moreBtnHandle = (await page.$x(moreBtnXPath))[0];
+    await moreBtnHandle.click();
+    await page.waitForXPath(openTranscriptBtnXPath);
+    const openTranscriptBtnHandle = (await page.$x(openTranscriptBtnXPath))[0];
+    await openTranscriptBtnHandle.click();
+    await page.waitForSelector("#segments-container");
+    const enagementPanelHandle = await page.$(`#segments-container`);
+    // selecting all child elements of enagementPanelHandle with class name 'cue-group'
+    let cueGroupList = await enagementPanelHandle.$$(":scope .segment");
+    const transcriptData = {};
+    const rawTranscriptData = {};
+    for (let i = 0; i < cueGroupList.length; i++) {
+      const cueGroupHandle = cueGroupList[i];
+      const cueGroupStartHandle = await cueGroupHandle.$(
+        ":scope .segment-timestamp"
+      );
+      const timeStamp = await cueGroupStartHandle.evaluate(
+        (domElement) => domElement.textContent
+      );
+      const cueHandle = await cueGroupHandle.$(":scope .segment-text");
+      const caption = await cueHandle.evaluate(
+        (domElement) => domElement.textContent
+      );
+      transcriptData[refactorTimeStamp(timeStamp.trim())] = caption.trim();
+      rawTranscriptData[timeStamp.trim()] = caption.trim();
+    }
+    return { rawTranscriptData, transcriptData };
   }
 };
