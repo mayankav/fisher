@@ -4,7 +4,7 @@ const moreBtnXPath =
   "/html/body/ytd-app/div[1]/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[2]/ytd-watch-metadata/div/div[4]/div[1]/div/ytd-text-inline-expander/tp-yt-paper-button[1]";
 const openTranscriptBtnXPath =
   "/html/body/ytd-app/div[1]/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[2]/ytd-watch-metadata/div/div[4]/div[1]/div/ytd-text-inline-expander/div[2]/ytd-structured-description-content-renderer/div/ytd-video-description-transcript-section-renderer/div[3]/div/ytd-button-renderer/yt-button-shape/button";
-const videoURL = "https://www.youtube.com/watch?v=wJB90G-tsgo";
+const videoURL = "https://www.youtube.com/watch?v=";
 
 exports.handler = async (event, context, callback) => {
   let browser;
