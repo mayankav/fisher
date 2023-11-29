@@ -33,7 +33,7 @@ exports.handler = async (event, context, callback) => {
     const s3 = new AWS.S3();
     appendJsonToS3(s3, transcript, videoId, "transcript");
     appendJsonToS3(s3, comments, videoId, "comments");
-    callback(null, transcript);
+    callback(null, { transcript, comments });
   } catch (error) {
     callback(error);
   } finally {
