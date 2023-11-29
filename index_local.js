@@ -25,7 +25,7 @@ function refactorTimeStamp(timeStamp) {
 }
 
 // Function to fetch YouTube comments
-async function getYouTubeComments(page) {
+async function getCommentsFromPage(page) {
   await page.waitForXPath(commentXPath);
   const commentHandleList = await page.$$(youtubeCommentWebComponent.comment);
   const comments = [];
@@ -33,17 +33,23 @@ async function getYouTubeComments(page) {
   for (let i = 0; i < commentHandleList.length; i++) {
     const commentHandle = commentHandleList[i];
     const commentTextHandle = await commentHandle.$("div#content");
-    const usernameHandle = await commentHandle.$(
+    const headerHandles = await commentHandle.$$(
       youtubeCommentWebComponent.username
     );
-    const username = await usernameHandle?.evaluate(
+    const userNameHandle = headerHandles[0];
+    const userName = await userNameHandle?.evaluate(
+      (domElement) => domElement.textContent
+    );
+    const commentTimeHandle = headerHandles[1];
+    const commentTime = await commentTimeHandle?.evaluate(
       (domElement) => domElement.textContent
     );
     const commentText = await commentTextHandle?.evaluate(
       (domElement) => domElement.textContent
     );
     comments.push({
-      username,
+      userName,
+      commentTime,
       commentText: commentText?.trim(),
     });
   }
@@ -52,39 +58,20 @@ async function getYouTubeComments(page) {
 
 // this fetches transcript + comments
 // change name later
-async function getTranscriptData() {
-  const browser = await pup.launch({
-    headless: false,
-    // for mac
-    executablePath:
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    // for windows
-    // executablePath: 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    waitUntil: "networkidle2",
-  });
-  const page = await browser.newPage();
-  console.warn("page", page);
-  page.setViewport({ width: 1280, height: 926 });
-  await page.goto(videoURL);
+async function getTranscriptDataFromPage(page) {
   await page.waitForXPath(moreBtnXPath);
   const moreBtnHandle = (await page.$x(moreBtnXPath))[0];
   await moreBtnHandle.click();
-  console.log("more button clicked....");
   await page.waitForXPath(openTranscriptBtnXPath);
   const openTranscriptBtnHandle = (await page.$x(openTranscriptBtnXPath))[0];
   await openTranscriptBtnHandle.click();
-  console.log("open Transcript Btn clicked....");
   //await page.waitForXPath(engagementPanelXPath);
   await page.waitForSelector("#segments-container");
 
-  const comments = await getYouTubeComments(page);
-  console.log("comments -", comments);
   //const enagementPanelHandle = (await page.$x(engagementPanelXPath))[0];
   const enagementPanelHandle = await page.$(`#segments-container`);
-  console.log("enagagement panel -", enagementPanelHandle);
   // selecting all child elements of enagementPanelHandle with class name 'segment'
   let cueGroupList = await enagementPanelHandle.$$(":scope .segment");
-  console.log("cue list -", cueGroupList);
   const transcriptData = {};
   const rawTranscriptData = {};
   for (let i = 0; i < cueGroupList.length; i++) {
@@ -102,11 +89,30 @@ async function getTranscriptData() {
     transcriptData[refactorTimeStamp(timeStamp.trim())] = caption.trim();
     rawTranscriptData[timeStamp.trim()] = caption.trim();
   }
-  browser.close();
-  console.log(transcriptData);
   return transcriptData;
-
   // https://youtu.be/dsv-CKHcotc?t=176
 }
 
-getTranscriptData();
+async function getData() {
+  const browser = await pup.launch({
+    headless: false,
+    // for mac
+    executablePath:
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    // for windows
+    // executablePath: 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    waitUntil: "networkidle2",
+  });
+  const page = await browser.newPage();
+  page.setViewport({ width: 1280, height: 926 });
+  await page.goto(videoURL);
+  const transcript = await getTranscriptDataFromPage(page);
+  console.log("\x1b[31m", `-----------TRANSCRIPT-----------`);
+  const comments = await getCommentsFromPage(page);
+  console.log("\x1b[31m", `-----------COMMENTS-----------`);
+  console.log(comments);
+  console.log(transcript);
+  browser.close();
+}
+
+getData();
