@@ -4,7 +4,14 @@ const moreBtnXPath =
   "/html/body/ytd-app/div[1]/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[2]/ytd-watch-metadata/div/div[4]/div[1]/div/ytd-text-inline-expander/tp-yt-paper-button[1]";
 const openTranscriptBtnXPath =
   "/html/body/ytd-app/div[1]/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[2]/ytd-watch-metadata/div/div[4]/div[1]/div/ytd-text-inline-expander/div[2]/ytd-structured-description-content-renderer/div/ytd-video-description-transcript-section-renderer/div[3]/div/ytd-button-renderer/yt-button-shape/button";
+const commentXPath =
+  "/html/body/ytd-app/div[1]/ytd-page-manager/ytd-watch-flexy/div[5]/div[1]/div/div[2]/ytd-comments/ytd-item-section-renderer/div[3]/ytd-comment-thread-renderer[1]/ytd-comment-renderer";
 const videoURL = "https://www.youtube.com/watch?v=wJB90G-tsgo";
+
+const youtubeCommentWebComponent = {
+  comment: "ytd-comment-renderer",
+  username: "yt-formatted-string",
+};
 
 /* takes timeStamp (minutes:seconds) as an argument
  * returns refactoredTimeStamp converted in seconds
@@ -17,6 +24,34 @@ function refactorTimeStamp(timeStamp) {
   return refactoredTimeStamp;
 }
 
+// Function to fetch YouTube comments
+async function getYouTubeComments(page) {
+  await page.waitForXPath(commentXPath);
+  const commentHandleList = await page.$$(youtubeCommentWebComponent.comment);
+  const comments = [];
+
+  for (let i = 0; i < commentHandleList.length; i++) {
+    const commentHandle = commentHandleList[i];
+    const commentTextHandle = await commentHandle.$("div#content");
+    const usernameHandle = await commentHandle.$(
+      youtubeCommentWebComponent.username
+    );
+    const username = await usernameHandle?.evaluate(
+      (domElement) => domElement.textContent
+    );
+    const commentText = await commentTextHandle?.evaluate(
+      (domElement) => domElement.textContent
+    );
+    comments.push({
+      username,
+      commentText: commentText?.trim(),
+    });
+  }
+  return comments;
+}
+
+// this fetches transcript + comments
+// change name later
 async function getTranscriptData() {
   const browser = await pup.launch({
     headless: false,
@@ -41,6 +76,9 @@ async function getTranscriptData() {
   console.log("open Transcript Btn clicked....");
   //await page.waitForXPath(engagementPanelXPath);
   await page.waitForSelector("#segments-container");
+
+  const comments = await getYouTubeComments(page);
+  console.log("comments -", comments);
   //const enagementPanelHandle = (await page.$x(engagementPanelXPath))[0];
   const enagementPanelHandle = await page.$(`#segments-container`);
   console.log("enagagement panel -", enagementPanelHandle);
